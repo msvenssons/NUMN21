@@ -2,6 +2,7 @@ import numpy as np
 
 
 class Layer:
+    """A fully connected layer with forward and backward passes for Sequential model"""
     def __init__(self, input_size: int, output_size: int, requires_grad=True):
         self.input_size = input_size
         self.output_size = output_size
@@ -31,7 +32,12 @@ class Layer:
         return dY
 
 
+
+# ---------------------------------------------------------------------------------------------------
+
+
 class ReLU:
+    """ReLU activation function: used as a layer in Sequential model"""
     def __init__(self):
         self.cache = None
         self.dbW = None
@@ -45,7 +51,12 @@ class ReLU:
     def _backward(self, dY: np.ndarray) -> np.ndarray:
         return dY * self.cache[0]
 
+
+# ---------------------------------------------------------------------------------------------------
+
+
 class Sigmoid:
+    """Sigmoid activation function: used as a layer in Sequential model"""
     def __init__(self):
         self.cache = None
         self.dbW = None
@@ -60,7 +71,12 @@ class Sigmoid:
         dY = dY * (out * (1 - out))
         return dY
 
+
+# ---------------------------------------------------------------------------------------------------
+
+
 class Sequential:
+    """Sequential model to stack layers and activation functions into a feedforward neural network."""
     def __init__(self, *layers):
         self.layers = layers
         self.out = None
@@ -78,7 +94,7 @@ class Sequential:
         return 0
     
     def _squared_error(self, preds: np.ndarray, labels: np.ndarray) -> float:
-        return np.mean((preds - labels) ** 2)
+        return preds - labels
     
     def _gradient_step(self, lr: float = 0.01):
         for layer in self.layers:
