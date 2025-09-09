@@ -120,7 +120,7 @@ class Sequential:
                 self._backward(labels_batch)
                 self._gradient_step(lr)
             if (epoch + 1) % 1 == 0 or epoch == 0:
-                full_pred = self(x)
+                full_pred = self(x) # not superefficient, can save predictions from last batch instead but this is easier
                 loss = np.mean((full_pred - labels) ** 2)
                 print(f"Epoch {epoch+1}/{epochs}, Loss: {loss:.4f}")
         
