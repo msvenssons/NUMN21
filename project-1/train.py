@@ -4,12 +4,13 @@ from src import Layer, Sequential, ReLU, Sigmoid
 import numpy as np
 import pickle
 import gzip
+import matplotlib.pyplot as plt
 
 # bug in model: check that output dim matches input dim (numpy adapts apparently but we would want an error)
 
 if __name__ == "__main__":
 
-    # training on MNIST dataset
+    # training on MNIST dataset (classification)
 
     # load mnist.pkl.gz
     with gzip.open('mnist.pkl.gz', 'rb') as f:
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     np.random.seed(111)
 
     # define model (using ReLU instead of Sigmoid for hidden layers as it performs better)
-    # precis som PyTorch:
+    # precis som PyTorch: https://docs.pytorch.org/docs/stable/generated/torch.nn.Sequential.html
     model = Sequential(
         Layer(28*28, 128),
         ReLU(),
@@ -52,6 +53,47 @@ if __name__ == "__main__":
 
 
     # eventually test on test data once we have narrowed down the hyperparameters
+
+
+
+# ---------------------------------------------------------------------------------------------------
+
+    # en autoencoder modell för att komprimera bilder till 64 dimensioner och sedan rekonstruera dem (för att se om modellen klarar det [det gör den] - ett bra test för koden)
+    
+    """model = Sequential(
+        Layer(28*28, 256),
+        ReLU(),
+        Layer(256, 128),
+        ReLU(),
+        Layer(128, 64),
+        ReLU(),
+        Layer(64, 128),
+        ReLU(),
+        Layer(128, 256),
+        ReLU(),
+        Layer(256, 28*28),
+        Sigmoid()
+    )
+    model.train(X_train, X_train, epochs=20, batch_size=64, lr=0.1)
+
+    preds = model(X_valid)
+    loss = np.mean((preds - X_valid) ** 2)
+    print(f"Validation Loss: {loss:.4f}")
+    
+    n = 10
+    plt.figure(figsize=(20, 4))
+    for i in range(n):
+        ax = plt.subplot(2, n, i + 1)
+        plt.imshow(X_valid[i].reshape(28, 28), cmap='gray')
+        plt.title("original")
+        plt.axis('off')
+
+        ax = plt.subplot(2, n, i + 1 + n)
+        plt.imshow(preds[i].reshape(28, 28), cmap='gray')
+        plt.title("reconstructed")
+        plt.axis('off')
+
+    plt.show()"""
 
     
 

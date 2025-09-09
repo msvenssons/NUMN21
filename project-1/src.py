@@ -8,7 +8,7 @@ class Layer:
         self.input_size = input_size
         self.output_size = output_size
         self.weights = np.random.randn(input_size, output_size) * np.sqrt(2.0/input_size)
-        self.b = np.random.uniform(-1, 1, (1, output_size))
+        self.b = np.random.uniform(0, 0.5, (1, output_size))
         self.requires_grad = requires_grad
         self.cache = None
         self.dW = None
@@ -27,9 +27,10 @@ class Layer:
     def _backward(self, dY: np.ndarray) -> np.ndarray:
         if self.requires_grad:
             x, out = self.cache
-            self.dW = x.T @ dY
-            self.db = np.sum(dY, axis=0, keepdims=True)
-            dY = dY @ self.weights.T
+            batch_size = x.shape[0]
+            self.dW = x.T @ dY / batch_size
+            self.db = np.sum(dY, axis=0, keepdims=True) / batch_size
+            dY = dY @ self.weights.T 
         return dY
 
 
@@ -63,6 +64,8 @@ class Sigmoid:
         self.dbW = None
     
     def __call__(self, x: np.ndarray) -> np.ndarray:
+        # clip large values to avoid overflow
+        x = np.clip(x, -500, 500)
         out = 1 / (1 + np.exp(-x))
         self.cache = (x, out)
         return out
@@ -107,7 +110,7 @@ class Sequential:
                 layer.cache = None
     
     def train(self, x: np.ndarray, labels: np.ndarray, epochs: int = 10, batch_size: int = 32, lr: float = 0.01):
-        """Simple training function that uses SGD to train the model. Prints training loss."""
+        """Simple training function that uses SGD to train the model. Prints training loss of the last batch (not the best choice)."""
         n_samples = x.shape[0]
         for epoch in range(epochs):
             perm = np.random.permutation(n_samples)
