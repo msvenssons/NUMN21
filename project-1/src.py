@@ -1,8 +1,9 @@
 import numpy as np
 
+# implementerade detta så att det liknar PyTorch; en Sequential-klass som stackar lager och aktiveringsfunktioner
 
 class Layer:
-    """A fully connected layer with forward and backward passes for Sequential model"""
+    """A fully connected layer with forward and backward passes for Sequential model."""
     def __init__(self, input_size: int, output_size: int, requires_grad=True):
         self.input_size = input_size
         self.output_size = output_size
@@ -37,7 +38,7 @@ class Layer:
 
 
 class ReLU:
-    """ReLU activation function: used as a layer in Sequential model"""
+    """ReLU activation function: used as a layer in Sequential model."""
     def __init__(self):
         self.cache = None
         self.dbW = None
@@ -56,7 +57,7 @@ class ReLU:
 
 
 class Sigmoid:
-    """Sigmoid activation function: used as a layer in Sequential model"""
+    """Sigmoid activation function: used as a layer in Sequential model."""
     def __init__(self):
         self.cache = None
         self.dbW = None
@@ -76,7 +77,7 @@ class Sigmoid:
 
 
 class Sequential:
-    """Sequential model to stack layers and activation functions into a feedforward neural network."""
+    """Sequential model to stack layers and activation functions into a feedforward neural network with forward and backward passes."""
     def __init__(self, *layers):
         self.layers = layers
         self.out = None
@@ -88,12 +89,12 @@ class Sequential:
         return x
     
     def _backward(self, labels: np.ndarray):
-        dY = self._squared_error(self.out, labels)
+        dY = self._squared_error_grad(self.out, labels)
         for layer in reversed(self.layers):
             dY = layer._backward(dY)
         return 0
     
-    def _squared_error(self, preds: np.ndarray, labels: np.ndarray) -> float:
+    def _squared_error_grad(self, preds: np.ndarray, labels: np.ndarray) -> float:
         return preds - labels
     
     def _gradient_step(self, lr: float = 0.01):
@@ -106,6 +107,7 @@ class Sequential:
                 layer.cache = None
     
     def train(self, x: np.ndarray, labels: np.ndarray, epochs: int = 10, batch_size: int = 32, lr: float = 0.01):
+        """Simple training function that uses SGD to train the model. Prints training loss."""
         n_samples = x.shape[0]
         for epoch in range(epochs):
             perm = np.random.permutation(n_samples)

@@ -5,9 +5,10 @@ import numpy as np
 import pickle
 import gzip
 
-# bug in model: check that output dim matches label dim (numpy adapts apparently but we would want an error)
+# bug in model: check that output dim matches input dim (numpy adapts apparently but we would want an error)
 
 if __name__ == "__main__":
+
     # training on MNIST dataset
 
     # load mnist.pkl.gz
@@ -24,7 +25,10 @@ if __name__ == "__main__":
     y_test = np.eye(10)[y_test]
 
     # train model on mnist
-    np.random.seed(45)
+    np.random.seed(111)
+
+    # define model (using ReLU instead of Sigmoid for hidden layers as this performs better)
+    # precis som PyTorch:
     model = Sequential(
         Layer(28*28, 128),
         ReLU(),
@@ -33,13 +37,15 @@ if __name__ == "__main__":
         Layer(64, 10),
         Sigmoid()
     )
+
+    # train model
     model.train(X_train, y_train, epochs=5, batch_size=32, lr=0.01)
 
     # evaluate on validation set
     preds = model(X_valid)
     preds = np.argmax(preds, axis=1)
     labels = np.argmax(y_valid, axis=1)
-    print(preds[0], labels[0])
+    #print(preds[0], labels[0])
     accuracy = np.mean(preds == labels)
     # use simple accuracy as a metric
     print(f"Validation Accuracy: {accuracy:.4f}")
@@ -47,28 +53,5 @@ if __name__ == "__main__":
 
     # eventually test on test data once we have narrowed down the hyperparameters
 
-
-
-
-    # simple test to see if model works 
-    """np.random.seed(42)
-    X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=np.float32)
-    y = np.array([[0], [1], [1], [0]], dtype=np.float32)
-    
-    X = np.tile(X, (50, 1))
-    y = np.tile(y, (50, 1))
-    
-    X += np.random.randn(*X.shape) * 0.1
-    
-    model = Sequential(
-        Layer(2, 8),
-        ReLU(),
-        Layer(8, 4),
-        ReLU(),
-        Layer(4, 1),
-        Sigmoid()
-    )
-    
-    train_model = model.train(X, y, epochs=100, batch_size=16, lr=0.1)"""
     
 
