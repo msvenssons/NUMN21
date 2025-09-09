@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # train model on mnist
     np.random.seed(111)
 
-    # define model (using ReLU instead of Sigmoid for hidden layers as this performs better)
+    # define model (using ReLU instead of Sigmoid for hidden layers as it performs better)
     # precis som PyTorch:
     model = Sequential(
         Layer(28*28, 128),

@@ -120,6 +120,7 @@ class Sequential:
                 self._backward(labels_batch)
                 self._gradient_step(lr)
             if (epoch + 1) % 1 == 0 or epoch == 0:
-                loss = np.mean((self.out - labels_batch) ** 2)
+                full_pred = self(x)
+                loss = np.mean((full_pred - labels) ** 2)
                 print(f"Epoch {epoch+1}/{epochs}, Loss: {loss:.4f}")
         
