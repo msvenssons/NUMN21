@@ -1,3 +1,5 @@
+# utilities - mostly for L-BFGS-B attack
+
 import numpy as np
 from scipy.optimize import minimize
 

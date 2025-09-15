@@ -1,10 +1,9 @@
+# small neural network library implementation 
+# implemented such that the API is similar to PyTorch; a Sequential class that stacks layers and activation functions
+
 import numpy as np
 import tqdm
 import matplotlib.pyplot as plt
-
-
-# small neural network library implementation 
-# implemented such that the API is similar to PyTorch; a Sequential class that stacks layers and activation functions
 
 class Layer:
     """
@@ -166,7 +165,7 @@ class Sequential:
         
         # iterate through progress bar (epochs)
         for epoch in pbar:
-            
+
             # shuffle data at the start of each epoch
             perm = np.random.permutation(sample_size)
             x_perm = x_train[perm]
