@@ -1,9 +1,17 @@
 import numpy as np
+import tqdm
+import matplotlib.pyplot as plt
 
-# implementerade detta så att det liknar PyTorch; en Sequential-klass som stackar lager och aktiveringsfunktioner
+# implemented this so the API is similar to PyTorch; a Sequential class that stacks layers and activation functions
 
 class Layer:
-    """A fully connected layer with forward and backward passes for Sequential model."""
+    """
+    A fully connected neural network layer supporting forward and backward passes.
+    Args:
+        input_size (int): Number of input features.
+        output_size (int): Number of output features.
+        requires_grad (bool, optional): If True, gradients are computed during backpropagation. Defaults to True.
+    """
     def __init__(self, input_size: int, output_size: int, requires_grad=True):
         self.input_size = input_size
         self.output_size = output_size
@@ -19,14 +27,14 @@ class Layer:
             # might have to transpose weights depending on input shape
             out = x @ self.weights + self.b
             # save relevant values for backpropagation
-            self.cache = (x, out)
+            self.cache = x
         except Exception as e:
             print(f"Error in forward pass (check input dimensions): {e}")
         return out
     
     def _backward(self, dY: np.ndarray) -> np.ndarray:
         if self.requires_grad:
-            x, out = self.cache
+            x = self.cache
             batch_size = x.shape[0]
             self.dW = x.T @ dY / batch_size
             self.db = np.sum(dY, axis=0, keepdims=True) / batch_size
@@ -67,13 +75,12 @@ class Sigmoid:
         # clip large values to avoid overflow
         x = np.clip(x, -500, 500)
         out = 1 / (1 + np.exp(-x))
-        self.cache = (x, out)
+        self.cache = out
         return out
     
     def _backward(self, dY: np.ndarray) -> np.ndarray:
-        x, out = self.cache
-        dY = dY * (out * (1 - out))
-        return dY
+        out = self.cache
+        return dY * (out * (1 - out))
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -100,6 +107,9 @@ class Sequential:
     def _squared_error_grad(self, preds: np.ndarray, labels: np.ndarray) -> float:
         return preds - labels
     
+    def _mse_loss(self, preds: np.ndarray, labels: np.ndarray) -> float:
+        return (1/2)*np.mean((preds - labels) ** 2)
+    
     def _gradient_step(self, lr: float = 0.01):
         for layer in self.layers:
             if isinstance(layer, Layer) and layer.requires_grad:
@@ -109,21 +119,37 @@ class Sequential:
                 layer.db = None
                 layer.cache = None
     
-    def train(self, x: np.ndarray, labels: np.ndarray, epochs: int = 10, batch_size: int = 32, lr: float = 0.01):
-        """Simple training function that uses SGD to train the model. Prints training loss of the last batch (not the best choice)."""
-        n_samples = x.shape[0]
-        for epoch in range(epochs):
-            perm = np.random.permutation(n_samples)
-            x_perm = x[perm]
-            labels_perm = labels[perm]
-            for i in range(0, n_samples, batch_size):
+    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray = None, y_val: np.ndarray = None, epochs: int = 10, batch_size: int = 32, lr: float = 0.01):
+        """
+        Simple training function that uses SGD to train the model. Prints training and validation loss.
+
+        Args:
+            x_train (np.ndarray): Training input data of shape (num_samples, num_features).
+            y_train (np.ndarray): Training target data of shape (num_samples, 1).
+            x_val (np.ndarray, optional): Validation input data of shape (num_val_samples, num_features).
+            y_val (np.ndarray, optional): Validation target data of shape (num_val_samples, 1).
+            epochs (int, optional): Number of training epochs. Defaults to 10.
+            batch_size (int, optional): Size of each mini-batch for SGD. Defaults to 32.
+            lr (float, optional): Learning rate for SGD. Defaults to 0.01."""
+
+        sample_size = x_train.shape[0]
+        pbar = tqdm.tqdm(range(epochs), desc="Training")
+        for epoch in pbar:
+            perm = np.random.permutation(sample_size)
+            x_perm = x_train[perm]
+            y_perm = y_train[perm]
+            for i in range(0, sample_size, batch_size):
                 x_batch = x_perm[i:i+batch_size]
-                labels_batch = labels_perm[i:i+batch_size]
+                y_batch = y_perm[i:i+batch_size]
                 self(x_batch)
-                self._backward(labels_batch)
+                self._backward(y_batch)
                 self._gradient_step(lr)
-            if (epoch + 1) % 1 == 0 or epoch == 0:
-                full_pred = self(x) # not superefficient, can save predictions from last batch instead but this is easier
-                loss = np.mean((full_pred - labels) ** 2)
-                print(f"Epoch {epoch+1}/{epochs}, Loss: {loss:.4f}")
-        
+            full_train_pred = self(x_train)
+            train_loss = self._mse_loss(full_train_pred, y_train)
+            if x_val is not None and y_val is not None:
+                full_val_pred = self(x_val)
+                val_loss = self._mse_loss(full_val_pred, y_val)
+                pbar.set_description(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+            else:
+                pbar.set_description(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f}")
+            pbar.refresh()
