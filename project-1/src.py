@@ -134,18 +134,22 @@ class Sequential:
 
         sample_size = x_train.shape[0]
         pbar = tqdm.tqdm(range(epochs), desc="Training")
+        
         for epoch in pbar:
             perm = np.random.permutation(sample_size)
             x_perm = x_train[perm]
             y_perm = y_train[perm]
+
             for i in range(0, sample_size, batch_size):
                 x_batch = x_perm[i:i+batch_size]
                 y_batch = y_perm[i:i+batch_size]
                 self(x_batch)
                 self._backward(y_batch)
                 self._gradient_step(lr)
+            
             full_train_pred = self(x_train)
             train_loss = self._mse_loss(full_train_pred, y_train)
+            
             if x_val is not None and y_val is not None:
                 full_val_pred = self(x_val)
                 val_loss = self._mse_loss(full_val_pred, y_val)
