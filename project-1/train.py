@@ -1,4 +1,4 @@
-# import model from src and train and test it on MNIST
+# import NN library from src and train and test it on MNIST
 
 from src import Layer, Sequential, ReLU, Sigmoid, LeakyReLU
 import numpy as np
