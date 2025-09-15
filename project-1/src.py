@@ -2,7 +2,7 @@ import numpy as np
 import tqdm
 import matplotlib.pyplot as plt
 
-# implemented this so the API is similar to PyTorch; a Sequential class that stacks layers and activation functions
+# implemented such that the API is similar to PyTorch; a Sequential class that stacks layers and activation functions
 
 class Layer:
     """
@@ -153,3 +153,21 @@ class Sequential:
             else:
                 pbar.set_description(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f}")
             pbar.refresh()
+
+    def get_accuracy(self, x: np.ndarray, y: np.ndarray, type: str = "Validation") -> float:
+        """
+        Evaluate the model on data and return the mean squared error loss and accuracy.
+
+        Args:
+            x (np.ndarray): Input data of shape (num_samples, num_features).
+            y (np.ndarray): TTarget data of shape (num_samples, 1).
+        """
+        preds = self(x)
+        loss = self._mse_loss(preds, y)
+        preds = np.argmax(preds, axis=1)
+        labels = np.argmax(y, axis=1)
+        #print(preds[0], labels[0])
+        accuracy = np.mean(preds == labels)
+        # use simple accuracy as a metric
+        print(f"{type} loss: {loss:.4f} | {type} accuracy: {accuracy:.4f}")
+        return loss
