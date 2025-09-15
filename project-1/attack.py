@@ -4,12 +4,11 @@ from src import Layer, Sequential, ReLU, Sigmoid
 import numpy as np
 import pickle
 import gzip
-import matplotlib.pyplot as plt
-from scipy.optimize import minimize
+from utils import generate_new_image, generate_additional_data
 
 
 if __name__ == "__main__":
-    # ---------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------
 
     # data pre-processing and building model
 
@@ -25,9 +24,10 @@ if __name__ == "__main__":
     y_valid = np.eye(10)[y_valid]
     y_test = np.eye(10)[y_test]
 
-    # train model on mnist
+    # set seed for reproducibility
     np.random.seed(111)
     
+    # build model
     model = Sequential(
         Layer(28*28, 128),
         Sigmoid(),
@@ -40,59 +40,14 @@ if __name__ == "__main__":
 # ---------------------------------------------------------------------------------------------------
 
     # train model
-    model.train(X_train, y_train, X_valid, y_valid, epochs=1, batch_size=32, lr=0.1)
+    model.train(X_train, y_train, X_valid, y_valid, epochs=10, batch_size=32, lr=0.1)
 
     # evaluate on validation set (accuracy)
     model.get_accuracy(X_valid, y_valid, type="Validation")
 
 # ---------------------------------------------------------------------------------------------------
     
-    # define the attack
-
-
-    # L-BFGS-B Attack
-    def generate_new_image(x, target_label, model, c=0.001):
-        y_target = np.zeros(10, dtype=int)
-        y_target[target_label] = 1
-        bounds = [(-xi, 1 - xi) for xi in x]
-
-        def softmax(X):
-            exps = np.exp(X)
-            return exps / np.sum(exps)
-
-        def cross_entropy(x_adv, y_onehot):
-            logits = model(x_adv.reshape(1, -1))[0]
-            p = softmax(logits)
-            return -np.sum(y_onehot * np.log(p + 1e-8))
-
-        res = minimize(
-            lambda r: c * np.linalg.norm(r)**2 + cross_entropy(np.clip(x + r, 0, 1), y_target),
-            np.zeros_like(x),
-            method='L-BFGS-B',
-            bounds=bounds,
-            options={'maxiter': 500}
-        )
-
-        return np.clip(x + res.x, 0, 1)
-    
-    def generate_additional_data(X, y, model, num_samples=500):
-        indices = np.random.choice(len(X), num_samples, replace=False)
-        X_adv = []
-        y_adv = []
-
-        for i in indices:
-            x = X[i]
-            true_label = np.argmax(y[i])
-            target_label = (true_label + 1) % 10
-            x_adv = generate_new_image(x, target_label, model)
-            X_adv.append(x_adv)
-            y_adv.append(y[i])  # keep original label
-
-        return np.array(X_adv), np.array(y_adv)
-    
-# ---------------------------------------------------------------------------------------------------
-    
-    # perform the attack and train on the new data
+    # perform the attack and train on the new data (attack functions are in utils.py)
 
     x = X_test[40]
     true_label = np.argmax(y_test[40])

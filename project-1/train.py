@@ -24,11 +24,12 @@ if __name__ == "__main__":
     y_valid = np.eye(10)[y_valid]
     y_test = np.eye(10)[y_test]
 
-    # train model on mnist
+    # set seed for reproducibility
     np.random.seed(111)
 
-    # define model (using ReLU instead of Sigmoid for hidden layers as it performs better)
-    # just like PyTorch API: https://docs.pytorch.org/docs/stable/generated/torch.nn.Sequential.html
+    # build model just like PyTorch API: https://docs.pytorch.org/docs/stable/generated/torch.nn.Sequential.html
+    # (ReLU instead of Sigmoid for hidden layers would perform better and is available, but sticking to Sigmoid as per instructions)
+
     model = Sequential(
         Layer(28*28, 128),
         Sigmoid(),
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     # evaluate on validation set
     model.get_accuracy(X_valid, y_valid, type="Validation")
 
-    # evaluate on test data
+    # evaluate on test data (do this once you have decided on your hyperparameters)
     model.get_accuracy(X_test, y_test, type="Test")
 
 

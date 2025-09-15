@@ -2,6 +2,8 @@ import numpy as np
 import tqdm
 import matplotlib.pyplot as plt
 
+
+# small neural network library implementation 
 # implemented such that the API is similar to PyTorch; a Sequential class that stacks layers and activation functions
 
 class Layer:
@@ -40,7 +42,6 @@ class Layer:
             self.db = np.sum(dY, axis=0, keepdims=True) / batch_size
             dY = dY @ self.weights.T 
         return dY
-
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -130,7 +131,8 @@ class Sequential:
             y_val (np.ndarray, optional): Validation target data of shape (num_val_samples, 1).
             epochs (int, optional): Number of training epochs. Defaults to 10.
             batch_size (int, optional): Size of each mini-batch for SGD. Defaults to 32.
-            lr (float, optional): Learning rate for SGD. Defaults to 0.01."""
+            lr (float, optional): Learning rate for SGD. Defaults to 0.01.
+        """
 
         sample_size = x_train.shape[0]
         pbar = tqdm.tqdm(range(epochs), desc="Training")
