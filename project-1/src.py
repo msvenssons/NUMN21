@@ -61,6 +61,31 @@ class ReLU:
     
     def _backward(self, dY: np.ndarray) -> np.ndarray:
         return dY * self.cache[0]
+    
+
+# ---------------------------------------------------------------------------------------------------
+
+
+class LeakyReLU:
+    """Leaky ReLU activation function."""
+    def __init__(self, alpha=0.01):
+        # Leaky ReLU has a small slope for negative values, called alpha.
+        # This prevents neurons from "dying" (always outputting zero).
+        self.alpha = alpha
+        self.cache = None
+    
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        # For each number in x, it takes the maximum of (alpha * x) and x.
+        # If x is positive, max is x. If x is negative, max is alpha*x.
+        out = np.maximum(self.alpha * x, x)
+        self.cache = (x,)
+        return out
+    
+    def _backward(self, dY: np.ndarray) -> np.ndarray:
+        x, = self.cache
+        # The gradient is 1 for positive inputs and 'alpha' for negative inputs.
+        mask = np.where(x > 0, 1, self.alpha)
+        return dY * mask
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -135,9 +160,14 @@ class Sequential:
         """
 
         sample_size = x_train.shape[0]
+
+        # use tqdm for progress bar
         pbar = tqdm.tqdm(range(epochs), desc="Training")
         
+        # iterate through progress bar (epochs)
         for epoch in pbar:
+            
+            # shuffle data at the start of each epoch
             perm = np.random.permutation(sample_size)
             x_perm = x_train[perm]
             y_perm = y_train[perm]

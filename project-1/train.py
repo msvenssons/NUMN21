@@ -1,6 +1,6 @@
 # import model from src and train and test it on MNIST
 
-from src import Layer, Sequential, ReLU, Sigmoid
+from src import Layer, Sequential, ReLU, Sigmoid, LeakyReLU
 import numpy as np
 import pickle
 import gzip
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     np.random.seed(111)
 
     # build model just like PyTorch API: https://docs.pytorch.org/docs/stable/generated/torch.nn.Sequential.html
-    # (ReLU instead of Sigmoid for hidden layers would perform better and is available, but sticking to Sigmoid as per instructions)
+    # (ReLU or LeakyReLU instead of Sigmoid for hidden layers would perform better and is available, but sticking to Sigmoid as per instructions)
 
     model = Sequential(
         Layer(28*28, 128),
@@ -38,6 +38,17 @@ if __name__ == "__main__":
         Layer(64, 10),
         Sigmoid()
     )
+
+    """
+    # Example model using LeakyReLU (epochs = 10, batch_size = 32, lr = 0.01 gives ~97% accuracy on test set)
+    leaky_model = Sequential(
+        Layer(28*28, 128),
+        LeakyReLU(alpha=0.01),           
+        Layer(128, 64),
+        LeakyReLU(alpha=0.01),  
+        Layer(64, 10),
+        Sigmoid()
+    )"""
 
     # train model
     model.train(X_train, y_train, X_valid, y_valid, epochs=10, batch_size=32, lr=0.1)
