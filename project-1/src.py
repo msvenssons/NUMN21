@@ -53,9 +53,12 @@ class ReLU:
         self.dbW = None
     
     def __call__(self, x: np.ndarray) -> np.ndarray:
-        out = np.maximum(0, x)
-        mask = np.where(x > 0, 1, 0)
-        self.cache = (mask, out)
+        try:
+            out = np.maximum(0, x)
+            mask = np.where(x > 0, 1, 0)
+            self.cache = (mask, out)
+        except Exception as e:
+            print(f"Error in ReLU forward pass: {e}")
         return out
     
     def _backward(self, dY: np.ndarray) -> np.ndarray:
@@ -76,8 +79,11 @@ class LeakyReLU:
     def __call__(self, x: np.ndarray) -> np.ndarray:
         # For each number in x, it takes the maximum of (alpha * x) and x.
         # If x is positive, max is x. If x is negative, max is alpha*x.
-        out = np.maximum(self.alpha * x, x)
-        self.cache = (x,)
+        try: 
+            out = np.maximum(self.alpha * x, x)
+            self.cache = (x,)
+        except Exception as e:
+            print(f"Error in LeakyReLU forward pass: {e}")
         return out
     
     def _backward(self, dY: np.ndarray) -> np.ndarray:
@@ -98,11 +104,14 @@ class Sigmoid:
     
     def __call__(self, x: np.ndarray) -> np.ndarray:
         # clip large values to avoid overflow
-        x = np.clip(x, -500, 500)
-        out = 1 / (1 + np.exp(-x))
-        self.cache = out
+        try:    
+            x = np.clip(x, -500, 500)
+            out = 1 / (1 + np.exp(-x))
+            self.cache = out
+        except Exception as e:
+            print(f"Error in Sigmoid forward pass: {e}")
         return out
-    
+
     def _backward(self, dY: np.ndarray) -> np.ndarray:
         out = self.cache
         return dY * (out * (1 - out))
@@ -113,27 +122,51 @@ class Sigmoid:
 
 class Sequential:
     """Sequential model to stack layers and activation functions into a feedforward neural network with forward and backward passes."""
-    def __init__(self, *layers):
+    def __init__(self, *layers, loss_function = "MSE"):
+        self.loss_function = loss_function
         self.layers = layers
         self.out = None
     
     def __call__(self, x: np.ndarray) -> np.ndarray:
-        for layer in self.layers:
-            x = layer(x)
-        self.out = x
+        try:
+            for layer in self.layers:
+                x = layer(x)
+            self.out = x
+        except Exception as e:
+            print(f"Error in Sequential forward pass: {e}")
         return x
     
     def _backward(self, labels: np.ndarray):
-        dY = self._squared_error_grad(self.out, labels)
-        for layer in reversed(self.layers):
-            dY = layer._backward(dY)
-        return 0
+        if self.loss_function == "MSE":
+            dY = self.out - labels
+            for layer in reversed(self.layers):
+                dY = layer._backward(dY)
+        elif self.loss_function == "Cross Entropy":
+            dY = self.out - labels
+            for layer in reversed(self.layers[:-1]):   # skip last activation(assumes it is sigmoid)
+                dY = layer._backward(dY)
+        else:
+            raise Exception("Non-existent loss function chosen.")
     
     def _squared_error_grad(self, preds: np.ndarray, labels: np.ndarray) -> float:
         return preds - labels
     
     def _mse_loss(self, preds: np.ndarray, labels: np.ndarray) -> float:
         return (1/2)*np.mean((preds - labels) ** 2)
+    
+    def _cross_entropy_loss(self, preds: np.ndarray, labels: np.ndarray) -> float:
+        eps = 1e-12  # avoid log(0)
+        preds = np.clip(preds, eps, 1. - eps)
+        loss = -np.mean(np.sum(labels * np.log(preds), axis=1))
+        return loss
+        
+    def _loss(self, preds: np.ndarray, labels: np.ndarray) -> float:
+        if self.loss_function == "MSE":
+            return self._mse_loss(preds,labels)
+        elif self.loss_function == "Cross Entropy":
+            return self._cross_entropy_loss(preds,labels)
+        else:
+            raise Exception("Non-existent loss function chosen.")
     
     def _gradient_step(self, lr: float = 0.01):
         for layer in self.layers:
@@ -179,11 +212,11 @@ class Sequential:
                 self._gradient_step(lr)
             
             full_train_pred = self(x_train)
-            train_loss = self._mse_loss(full_train_pred, y_train)
+            train_loss = self._loss(full_train_pred, y_train)
             
             if x_val is not None and y_val is not None:
                 full_val_pred = self(x_val)
-                val_loss = self._mse_loss(full_val_pred, y_val)
+                val_loss = self._loss(full_val_pred, y_val)
                 pbar.set_description(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
             else:
                 pbar.set_description(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f}")
@@ -198,7 +231,7 @@ class Sequential:
             y (np.ndarray): TTarget data of shape (num_samples, 1).
         """
         preds = self(x)
-        loss = self._mse_loss(preds, y)
+        loss = self._loss(preds, y)
         preds = np.argmax(preds, axis=1)
         labels = np.argmax(y, axis=1)
         #print(preds[0], labels[0])
