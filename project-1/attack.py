@@ -49,7 +49,7 @@ if __name__ == "__main__":
     
     # perform the attack and train on the new data (additional functions are found in utils.py)
 
-    def attack(X_test,y_test,model):
+    def attack(model):
         x = X_test[40]
         true_label = np.argmax(y_test[40])
         target_label = (true_label + 1) % 10
@@ -59,21 +59,15 @@ if __name__ == "__main__":
         pred_label = np.argmax(model(x_adv.reshape(1, -1)))
         print(f"True label: {true_label}, Target label: {target_label}, Predicted on adversarial: {pred_label}")
 
-        X_adv, y_adv = generate_additional_data(X_test, y_test, model, num_samples=50)
 
-        X_new = np.vstack([X_test, X_adv])
-        y_new = np.vstack([y_test, y_adv])
-        return X_new, y_new
+    attack(model)
+    X_adv, y_adv = generate_additional_data(X_test, y_test, model, num_samples=10)
 
-    X_new, y_new = attack(X_test,y_test,model)   
-    model.get_accuracy(X_new, y_new, type="Training")
-
+    X_new = np.vstack([X_train, X_adv])
+    y_new = np.vstack([y_train, y_adv])
 
     model.train(X_new, y_new, epochs=10, batch_size=32, lr=0.1)
-    model.get_accuracy(X_new, y_new, type="Training")
+    
+    model.get_accuracy(X_valid, y_valid, type="Training")
 
-    X_new2, y_new2 = attack(X_new,y_new,model)   
-
-    model.get_accuracy(X_new2, y_new2, type="Training")
-    model.train(X_new2, y_new2, epochs=10, batch_size=32, lr=0.1)
-    model.get_accuracy(X_new2, y_new2, type="Training")
+    attack(model)
