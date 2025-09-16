@@ -1,5 +1,5 @@
-- Carl:
-- Cornelia:
-- Klara:
-- Maria:
+- Carl: worked on cross entropy, hyperparameter analysis, and one-hot vs bit encoding
+- Cornelia: worked on L-BFGS attack
+- Klara: worked on L-BFGS attack
+- Maria: worked on activation functions and testing
 - Max: worked on neural network implementation
