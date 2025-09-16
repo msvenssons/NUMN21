@@ -1,5 +1,5 @@
-Carl: 
-Cornelia:
-Klara: 
-Maria:
-Max: worked on neural network implementation
+- Carl:
+- Cornelia:
+- Klara:
+- Maria:
+- Max: worked on neural network implementation
