@@ -3,7 +3,10 @@ import numpy as np
 
 class Newton(OptimizationMethod):
     def get_direction(self, state: State) -> np.ndarray:
-        s = np.linalg.solve(state.hess, -state.grad) # solve Hs = -g, giving us the search direction s
+        try:
+            s = np.linalg.solve(state.hess, -state.grad) # solve Hs = -g, giving us the search direction s
+        except np.linalg.LinAlgError:
+            s = np.linalg.lstsq(state.hess, -state.grad, rcond=None)[0]  # use least squares if Hessian is singular
         return s
     
     def get_alpha(self, state: State) -> float:
@@ -32,7 +35,7 @@ if __name__ == "__main__":
     problem = OptimizationProblem(f=f)
 
     newton = Newton(problem, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000)
-    x0 = np.array([2.0, 2.0], dtype=float)
+    x0 = np.array([21.0, 30.0], dtype=float)
 
     result = newton.optimize(x0)
 
