@@ -55,7 +55,7 @@ class OptimizationMethod(ABC):
             print("Warning: No gradient provided, using finite difference gradient approximation.")
         
         if problem.hess is None:
-            print("Warning: No Hessian provided, using Hessian approximation (_fd_hess).")
+            print("Warning: No Hessian provided, using Hessian approximation (_hess_approx).")
 
     # @abstractmethod means that you have to implement this method in any subclass you want to create; i.e. this is a template method that can change between different optimization methods 
     @abstractmethod
@@ -70,7 +70,8 @@ class OptimizationMethod(ABC):
 
 
     @abstractmethod
-    def _fd_hess(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
+    def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
+        # maybe option to add name of approximation so it can be printed in the init warning?
         ...
 
 
@@ -89,7 +90,7 @@ class OptimizationMethod(ABC):
     
 
     def _hess(self, x: np.ndarray) -> np.ndarray:
-        return self.problem.hess(x) if self.problem.hess else self._fd_hess(x)
+        return self.problem.hess(x) if self.problem.hess else self._hess_approx(x)
     
 
     def _cauchy_stopping(self, x: np.ndarray, x_new: np.ndarray) -> bool:

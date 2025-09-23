@@ -13,7 +13,7 @@ class Newton(OptimizationMethod):
     def get_alpha(self, state: State) -> float:
         return 1.0  # fixed step size
     
-    def _fd_hess(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
+    def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
         """
         Approximates the Hessian matrix using finite differences (derivative of the gradient).
         """
