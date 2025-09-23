@@ -35,7 +35,7 @@ if __name__ == "__main__":
     problem = OptimizationProblem(f=f)
 
     newton = Newton(problem, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000)
-    x0 = np.array([21.0, 30.0], dtype=float)
+    x0 = np.array([1.0, 3.0], dtype=float)
 
     result = newton.optimize(x0)
 

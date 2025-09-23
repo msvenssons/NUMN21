@@ -99,7 +99,7 @@ class OptimizationMethod(ABC):
 
     # for plotting; save the states
     def optimize(self, x0: np.ndarray) -> State:
-        state = self.init_state(x0)
+        state = self._init_state(x0)
 
         for it in range(self.max_iter):
 
