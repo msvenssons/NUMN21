@@ -14,13 +14,7 @@ class Newton(OptimizationMethod):
         return 1.0  # fixed step size
     
     def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
-        """
-        Approximates the Hessian matrix using finite differences (derivative of the gradient).
-        """
-        e_i = np.eye(len(x))
-        hess = np.array([(self._fd_grad(x + h * e) - self._fd_grad(x - h * e)) / (2 * h) for e in e_i])
-        hess = np.column_stack(hess)
-        return 0.5*(hess + hess.T)   # symmetrizing step
+        return self._fd_hess(x, h)
 
 
 if __name__ == "__main__":

@@ -93,6 +93,16 @@ class OptimizationMethod(ABC):
         return self.problem.hess(x) if self.problem.hess else self._hess_approx(x)
     
 
+    def _fd_hess(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
+        """
+        Approximates the Hessian matrix using finite differences (derivative of the gradient).
+        """
+        e_i = np.eye(len(x))
+        hess = np.array([(self._fd_grad(x + h * e) - self._fd_grad(x - h * e)) / (2 * h) for e in e_i])
+        hess = np.column_stack(hess)
+        return 0.5*(hess + hess.T)   # symmetrizing step
+
+
     def _cauchy_stopping(self, x: np.ndarray, x_new: np.ndarray) -> bool:
         return np.linalg.norm(x_new - x) < self.cauchy_tol
 
