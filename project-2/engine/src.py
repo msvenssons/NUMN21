@@ -1,4 +1,4 @@
-# TODO: error handling
+# TODO: error handling, testing, saving and plotting, docstrings, Hessian update for quasi-newton methods
 
 
 from dataclasses import dataclass
@@ -35,7 +35,6 @@ class OptimizationProblem:
     hess: Hessian | None = None
 
 
-# should alpha be adjustable during optimization?
 class OptimizationMethod(ABC):
     def __init__(self, problem: OptimizationProblem, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000):
         self.problem = problem
@@ -43,7 +42,7 @@ class OptimizationMethod(ABC):
         self.grad_tol = grad_tol
         self.max_iter = max_iter
 
-
+    # @abstractmethod means that you have to implement this method in any subclass you want to create; i.e. this is a template method that can change between different optimization methods 
     @abstractmethod
     def get_direction(self, state: State) -> np.ndarray:
         ...
@@ -94,7 +93,8 @@ class OptimizationMethod(ABC):
         return State(x=x0, f=f, grad=grad, hess=hess, s=s, iter=0)
     
 
-    # might have to add a hessian update step for some later methods, just add function for that here
+    # might have to add a hessian update step for some later methods, just add a function for that here if you need that and update optimize method
+    # but keep those that don't need it invariant to that method if possible
 
 
     # for plotting; save the states
