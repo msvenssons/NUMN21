@@ -7,11 +7,19 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 # arrays for multidimensional problems
-Gradient = Callable[[np.ndarray], np.ndarray]
-Hessian = Callable[[np.ndarray], np.ndarray]
+#Gradient = Callable[[np.ndarray], np.ndarray]
+#Hessian = Callable[[np.ndarray], np.ndarray]
 
 class Objective(Protocol):
     def __call__(self, x: np.ndarray) -> float:
+        ...
+
+class Gradient(Protocol):
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        ...
+
+class Hessian(Protocol):
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         ...
 
 
