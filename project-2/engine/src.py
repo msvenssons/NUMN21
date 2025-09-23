@@ -41,6 +41,7 @@ class OptimizationProblem:
     f: Objective
     grad: Gradient | None = None
     hess: Hessian | None = None
+    x0 : np.ndarray | None = None
 
 
 class OptimizationMethod(ABC):
@@ -49,6 +50,12 @@ class OptimizationMethod(ABC):
         self.cauchy_tol = cauchy_tol
         self.grad_tol = grad_tol
         self.max_iter = max_iter
+
+        if problem.grad is None:
+            print("Warning: No gradient provided, using finite difference gradient approximation.")
+        
+        if problem.hess is None:
+            print("Warning: No Hessian provided, using Hessian approximation (_fd_hess).")
 
     # @abstractmethod means that you have to implement this method in any subclass you want to create; i.e. this is a template method that can change between different optimization methods 
     @abstractmethod
@@ -107,7 +114,7 @@ class OptimizationMethod(ABC):
 
     # for plotting; save the states
     def optimize(self, x0: np.ndarray) -> State:
-        state = self._init_state(x0)
+        state = self._init_state(x0) # needs error handling if x0 is None or not provided
 
         for it in range(self.max_iter):
 
