@@ -77,15 +77,15 @@ class OptimizationMethod(ABC):
         return self.problem.hess(x) if self.problem.hess else self._fd_hess(x)
     
 
-    def cauchy_stopping(self, x: np.ndarray, x_new: np.ndarray) -> bool:
+    def _cauchy_stopping(self, x: np.ndarray, x_new: np.ndarray) -> bool:
         return np.linalg.norm(x_new - x) < self.cauchy_tol
 
 
-    def gradient_stopping(self, grad: np.ndarray) -> bool:
+    def _gradient_stopping(self, grad: np.ndarray) -> bool:
         return np.linalg.norm(grad) < self.grad_tol
 
 
-    def init_state(self, x0: np.ndarray) -> State:
+    def _init_state(self, x0: np.ndarray) -> State:
         f = self.problem.f(x0)
         grad = self._grad(x0)
         hess = self._hess(x0)
@@ -103,7 +103,7 @@ class OptimizationMethod(ABC):
 
         for it in range(self.max_iter):
 
-            if self.gradient_stopping(state.grad):
+            if self._gradient_stopping(state.grad):
                 state.converged = True
                 state.iter = it
                 state.converge_mode = "gradient"
@@ -117,7 +117,7 @@ class OptimizationMethod(ABC):
             g_new = self._grad(x_new)
             H_new = self._hess(x_new)
 
-            if self.cauchy_stopping(state.x, x_new):
+            if self._cauchy_stopping(state.x, x_new):
                 return State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=True, converge_mode="cauchy")
             
             state = State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=False)
