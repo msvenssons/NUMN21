@@ -117,19 +117,23 @@ class OptimizationMethod(ABC):
                 state.converge_mode = "gradient"
                 return state
 
-            s     = self.get_direction(state)
-            a     = self.get_alpha(state)
+            s = self.get_direction(state)
+            a = self.get_alpha(state)
             x_new = self._step(state.x, s, a)
 
             f_new = self.problem.f(x_new)
             g_new = self._grad(x_new)
             H_new = self._hess(x_new)
 
-            if self._cauchy_stopping(state.x, x_new):
-                return State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=True, converge_mode="cauchy")
-            
-            state = State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=False)
+            new_state = State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=False)
 
+            if self._cauchy_stopping(state.x, x_new):
+                new_state.converged = True
+                new_state.converge_mode = "cauchy"
+                return new_state
+            
+            state = new_state
+        
         state.converged = False
         return state
 

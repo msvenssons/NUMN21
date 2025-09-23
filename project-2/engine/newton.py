@@ -44,3 +44,7 @@ if __name__ == "__main__":
     print("x* =", result.x)
     print("f(x*) =", result.f)
     print("Convergence mode:", result.converge_mode)
+
+
+
+# maybe create some sort of wrapper that turns input into np.ndarray if it is not already?
