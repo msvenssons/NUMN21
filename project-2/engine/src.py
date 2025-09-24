@@ -1,5 +1,5 @@
 # TODO: error handling, testing, saving and plotting, docstrings, Hessian update for quasi-newton methods
-
+# TODO: implement a registry pattern for the different methods so they can be called by name
 
 from dataclasses import dataclass
 from typing import Callable, Optional, Protocol, Tuple
