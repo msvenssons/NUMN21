@@ -72,7 +72,8 @@ class OptimizationMethod(ABC):
 
     def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
         # maybe option to add name of approximation so it can be printed in the init warning?
-        ...
+        # overwrite this in subclass if we need a different approximation, otherwise default will be finite difference approx.
+        return self._fd_hess(x, h)
 
     def get_alpha(self, state: State) -> float:
         if self.line_search is not None:
