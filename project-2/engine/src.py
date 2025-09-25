@@ -44,12 +44,20 @@ class OptimizationProblem:
     x0 : np.ndarray | None = None
 
 
+class LineSearch(ABC):
+    @abstractmethod
+    def get_line_alpha(self, state: State) -> float:
+        ...
+
+
 class OptimizationMethod(ABC):
-    def __init__(self, problem: OptimizationProblem, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000):
+    def __init__(self, problem: OptimizationProblem, line_search: LineSearch | None = None, alpha_0: float = 1.0, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000):
         self.problem = problem
         self.cauchy_tol = cauchy_tol
         self.grad_tol = grad_tol
         self.max_iter = max_iter
+        self.line_search = line_search
+        self.alpha_0 = alpha_0
 
         if problem.grad is None:
             print("Warning: No gradient provided, using finite difference gradient approximation.")
@@ -62,18 +70,15 @@ class OptimizationMethod(ABC):
     def get_direction(self, state: State) -> np.ndarray:
         ...
 
-
-    # maybe like this to get adjustable alpha?
-    @abstractmethod
-    def get_alpha(self, state: State) -> float:
-        ...
-
-
-    @abstractmethod
     def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
         # maybe option to add name of approximation so it can be printed in the init warning?
         ...
 
+    def get_alpha(self, state: State) -> float:
+        if self.line_search is not None:
+            return self.line_search.get_line_alpha(state)
+        else:
+            return self.alpha_0
 
     def _step(self, x: np.ndarray, s: np.ndarray, alpha: float) -> np.ndarray:
         return x + s * alpha
