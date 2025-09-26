@@ -6,10 +6,6 @@ from typing import Callable, Optional, Protocol, Tuple
 import numpy as np
 from abc import ABC, abstractmethod
 
-# arrays for multidimensional problems
-#Gradient = Callable[[np.ndarray], np.ndarray]
-#Hessian = Callable[[np.ndarray], np.ndarray]
-
 class Objective(Protocol):
     def __call__(self, x: np.ndarray) -> float:
         ...
@@ -51,19 +47,39 @@ class LineSearch(ABC):
 
 
 class OptimizationMethod(ABC):
-    def __init__(self, problem: OptimizationProblem, line_search: LineSearch | None = None, alpha_0: float = 1.0, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000):
+    """
+    Wrapper class for optimization methods.
+    Args: 
+        problem: OptimizationProblem - optimization problem to be solved
+        line_search: LineSearch | None (Optional) - line search method to be used (Default: None)
+        alpha_0: float - the initial step size (Default: 1.0)
+        cauchy_tol: float - tolerance for the Cauchy stopping criterion (Default: 1e-5)
+        grad_tol: float - tolerance for the gradient stopping criterion (Default: 1e-5)
+        max_iter: int - maximum number of iterations (Default: 1000)
+        verbose: bool - print iteration details (Default: False)
+        hess_name: str | None (Optional) - name of the Hessian approximation method used (Default: None)
+    """
+
+    def __init__(self, problem: OptimizationProblem, line_search: LineSearch | None = None, alpha_0: float = 1.0, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000, verbose = False):
         self.problem = problem
         self.cauchy_tol = cauchy_tol
         self.grad_tol = grad_tol
         self.max_iter = max_iter
         self.line_search = line_search
         self.alpha_0 = alpha_0
+        self.verbose = verbose
+        self.hess_name: str | None = "provided"
 
         if problem.grad is None:
-            print("Warning: No gradient provided, using finite difference gradient approximation.")
+            print("Warning: No gradient provided, using gradient approximation (finite difference).")
         
         if problem.hess is None:
-            print("Warning: No Hessian provided, using Hessian approximation (_hess_approx).")
+            self.set_hess_name()
+            print(f"Warning: No Hessian provided, using Hessian approximation ({self.hess_name}).")
+
+        assert grad_tol >= 0 and cauchy_tol >= 0, "Tolerances must be positive or 0."
+        assert max_iter > 0, "Maximum number of iterations must be positive."
+
 
     # @abstractmethod means that you have to implement this method in any subclass you want to create; i.e. this is a template method that can change between different optimization methods 
     @abstractmethod
@@ -74,12 +90,17 @@ class OptimizationMethod(ABC):
         # maybe option to add name of approximation so it can be printed in the init warning?
         # overwrite this in subclass if we need a different approximation, otherwise default will be finite difference approx.
         return self._fd_hess(x, h)
+    
+    # bug prone implementation since it is easy to forget to change this if hess_approx has been overwritten in a subclass
+    def set_hess_name(self) -> None:
+        self.hess_name = "finite difference" # default name, can be changed in subclass if needed
 
     def get_alpha(self, state: State) -> float:
         if self.line_search is not None:
             return self.line_search.get_line_alpha(state)
         else:
-            return self.alpha_0
+            return self.alpha_0 # default to fixed step size (can be dynamic in subclass if needed)
+
 
     def _step(self, x: np.ndarray, s: np.ndarray, alpha: float) -> np.ndarray:
         return x + s * alpha
@@ -122,6 +143,10 @@ class OptimizationMethod(ABC):
         grad = self._grad(x0)
         hess = self._hess(x0)
         s = np.zeros_like(x0)
+
+        if self.verbose:
+            print(f"Iteration {0} \n x: {x0} \n f: {f} \n grad: {grad} \n hess: {hess} \n")
+        
         return State(x=x0, f=f, grad=grad, hess=hess, s=s, iter=0)
     
 
@@ -131,6 +156,7 @@ class OptimizationMethod(ABC):
 
     # for plotting; save the states
     def optimize(self, x0: np.ndarray) -> State:
+
         state = self._init_state(x0) # needs error handling if x0 is None or not provided
 
         for it in range(self.max_iter):
@@ -151,6 +177,9 @@ class OptimizationMethod(ABC):
 
             new_state = State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=False)
 
+            if self.verbose:
+                print(f"Iteration {new_state.iter} \n x: {new_state.x} \n f: {new_state.f} \n grad: {new_state.grad} \n hess: {new_state.hess} \n")
+
             if self._cauchy_stopping(state.x, x_new):
                 new_state.converged = True
                 new_state.converge_mode = "cauchy"
@@ -160,4 +189,3 @@ class OptimizationMethod(ABC):
         
         state.converged = False
         return state
-

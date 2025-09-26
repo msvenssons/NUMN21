@@ -1,20 +1,18 @@
 from src import OptimizationMethod, OptimizationProblem, State
 from objectives import Rosenbrock
 import numpy as np
+import warnings
 
 class Newton(OptimizationMethod):
     def get_direction(self, state: State) -> np.ndarray:
         try:
             s = np.linalg.solve(state.hess, -state.grad) # solve Hs = -g, giving us the search direction s
+
         except np.linalg.LinAlgError:
+            warnings.warn("Hessian is singular - trying least squares.")
             s = np.linalg.lstsq(state.hess, -state.grad, rcond=None)[0]  # use least squares if Hessian is singular
+
         return s
-    
-    def get_alpha(self, state: State) -> float:
-        return 1.0  # fixed step size
-    
-    def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
-        return self._fd_hess(x, h)
 
 
 if __name__ == "__main__":
@@ -22,7 +20,7 @@ if __name__ == "__main__":
     Rosenbrock.hess = None # to test finite difference hessian
     Rosenbrock.x0 = np.array([-1.2, 1.0], dtype=float) # change initial guess if needed
 
-    newton = Newton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000)
+    newton = Newton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, verbose=False)
 
     result = newton.optimize(Rosenbrock.x0)
 
@@ -54,7 +52,6 @@ if __name__ == "__main__":
 
 
 # maybe create some sort of wrapper that turns input into np.ndarray if it is not already?
-
 
 
 
