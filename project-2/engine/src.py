@@ -77,9 +77,11 @@ class OptimizationMethod(ABC):
             self.set_hess_name()
             print(f"Warning: No Hessian provided, using Hessian approximation ({self.hess_name}).")
 
-        assert grad_tol >= 0 and cauchy_tol >= 0, "Tolerances must be positive or 0."
-        assert max_iter > 0, "Maximum number of iterations must be positive."
+        if grad_tol < 0 or cauchy_tol < 0:
+            raise ValueError("Tolerances must be positive.")
 
+        if max_iter <= 0:
+            raise ValueError("Maximum number of iterations must be positive.")
 
     # @abstractmethod means that you have to implement this method in any subclass you want to create; i.e. this is a template method that can change between different optimization methods 
     @abstractmethod
