@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass
 from typing import Callable, Optional, Protocol, Tuple
+import warnings
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -60,22 +61,21 @@ class OptimizationMethod(ABC):
         hess_name: str | None (Optional) - name of the Hessian approximation method used (Default: None)
     """
 
-    def __init__(self, problem: OptimizationProblem, line_search: LineSearch | None = None, alpha_0: float = 1.0, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000, verbose = False):
+    def __init__(self, problem: OptimizationProblem, line_search: LineSearch | None = None, alpha_0: float = 1.0, cauchy_tol: float = 1e-5, grad_tol: float = 1e-5, max_iter: int = 1000, hess_update: str | None = None, verbose = False):
         self.problem = problem
         self.cauchy_tol = cauchy_tol
         self.grad_tol = grad_tol
         self.max_iter = max_iter
         self.line_search = line_search
         self.alpha_0 = alpha_0
+        self.hess_update = hess_update
         self.verbose = verbose
-        self.hess_name: str | None = "provided"
 
         if problem.grad is None:
             print("Warning: No gradient provided, using gradient approximation (finite difference).")
         
         if problem.hess is None:
-            self.set_hess_name()
-            print(f"Warning: No Hessian provided, using Hessian approximation ({self.hess_name}).")
+            print(f"Warning: No Hessian provided, using Hessian approximation.")
 
         if grad_tol < 0 or cauchy_tol < 0:
             raise ValueError("Tolerances must be positive.")
@@ -83,19 +83,92 @@ class OptimizationMethod(ABC):
         if max_iter <= 0:
             raise ValueError("Maximum number of iterations must be positive.")
 
+
     # @abstractmethod means that you have to implement this method in any subclass you want to create; i.e. this is a template method that can change between different optimization methods 
     @abstractmethod
     def get_direction(self, state: State) -> np.ndarray:
         ...
+
 
     def _hess_approx(self, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
         # maybe option to add name of approximation so it can be printed in the init warning?
         # overwrite this in subclass if we need a different approximation, otherwise default will be finite difference approx.
         return self._fd_hess(x, h)
     
-    # bug prone implementation since it is easy to forget to change this if hess_approx has been overwritten in a subclass
-    def set_hess_name(self) -> None:
-        self.hess_name = "finite difference" # default name, can be changed in subclass if needed
+
+    def _good_broyden_update(self, G: np.ndarray, delta: np.ndarray, gamma: np.ndarray, damp=0.3) -> np.ndarray:
+        delta = delta.reshape(-1, 1)
+        gamma = gamma.reshape(-1, 1)
+        denom = delta.T @ G @ gamma
+        if abs(denom) < 1e-12:
+            print("Too small denominator, skipping update")
+            return G
+        update = ((delta - G @ gamma) @ (delta.T @ G)) / denom
+        G += damp * update 
+        return G
+     
+     
+    def _bad_broyden_update(self, H: np.ndarray, delta: np.ndarray, gamma: np.ndarray, damp=0.3):
+        delta = delta.reshape(-1, 1)
+        gamma = gamma.reshape(-1, 1)
+        denom = gamma.T @ gamma
+        if abs(denom) < 1e-12:
+            print("Too small denominator, skipping update")
+            return H
+        update = ((delta - H @ gamma) @ gamma.T) / denom
+        H += damp * update  # in-place
+        return H
+    
+
+    def _sym_broyden_update(self, G: np.ndarray, delta: np.ndarray, gamma: np.ndarray, damp=0.3) -> np.ndarray:
+        delta = delta.reshape(-1,1)
+        gamma = gamma.reshape(-1,1)
+        diff = delta - G @ gamma
+        denom = float(diff.T @ gamma)
+
+        if abs(denom) < 1e-12:
+            print("Too small denominator, skipping update")
+            return G
+        
+        update = (diff @ diff.T) / denom
+        G += damp * update
+        return G
+    
+
+    def _dfp_update(self, H: np.ndarray, delta: np.ndarray, gamma: np.ndarray, damp=0.7) -> np.ndarray:
+        delta = delta.reshape(-1,1)
+        gamma = gamma.reshape(-1,1)
+        denom_1 = delta.T @gamma
+        denom_2 = gamma.T @ H @ gamma
+
+        if abs(denom_1) < 1e-12 or abs(denom_2) < 1e-12:
+            print("Too small denominator, skipping update")
+            return H
+
+
+        term1 = np.outer(delta, delta) / denom_1
+        term2 = H @ np.outer(gamma, gamma) @ H / denom_2
+        update = term1 - term2
+        H += damp * update
+        return H
+    
+
+    def _bfgs_update(self, H: np.ndarray, delta: np.ndarray, gamma: np.ndarray, damp = 1.0) -> np.ndarray:
+        delta = delta.reshape(-1,1)
+        gamma = gamma.reshape(-1,1)
+        denom = delta.T @ gamma
+
+        if denom < 1e-12:
+            print("Too small denominator, skipping update")
+            return H
+        
+        Hgamma = H @ gamma
+        term1 = (1 + (gamma.T @ Hgamma) / denom) * (delta @ delta.T) / denom
+        term2 = (delta @ (gamma.T @ H) + Hgamma @ delta.T) / denom
+        update = term1 - term2
+        H += damp * update
+        return H
+
 
     def get_alpha(self, state: State) -> float:
         if self.line_search is not None:
@@ -141,9 +214,14 @@ class OptimizationMethod(ABC):
 
 
     def _init_state(self, x0: np.ndarray) -> State:
+        if self.hess_update:
+        # Quasi-Newton: start with identity matrix
+            hess = np.eye(len(x0))
+        else:
+            hess = self._hess(x0)
+        
         f = self.problem.f(x0)
         grad = self._grad(x0)
-        hess = self._hess(x0)
         s = np.zeros_like(x0)
 
         if self.verbose:
@@ -176,6 +254,24 @@ class OptimizationMethod(ABC):
             f_new = self.problem.f(x_new)
             g_new = self._grad(x_new)
             H_new = self._hess(x_new)
+
+            delta = x_new - state.x
+            gamma = g_new - state.grad
+
+
+            if self.hess_update == "good broyden":
+                H_new = self._good_broyden_update(state.hess, delta, gamma)
+            elif self.hess_update == "bad broyden":
+                H_new = self._bad_broyden_update(state.hess, delta, gamma)
+            elif self.hess_update == "symmetric broyden":
+                H_new = self._sym_broyden_update(state.hess, delta, gamma)
+            elif self.hess_update == "dfp2":
+                H_new = self._dfp_update(state.hess, delta, gamma)
+            elif self.hess_update == "bfgs2":
+                H_new = self._bfgs_update(state.hess, delta, gamma)
+            else:
+                H_new = self._hess(x_new)
+
 
             new_state = State(x=x_new, f=f_new, grad=g_new, hess=H_new, s=s, alpha=a, iter=it+1, converged=False)
 

@@ -1,10 +1,12 @@
 from src import OptimizationMethod, OptimizationProblem, State
 from linesearch import ExactLineSearch, InExactLineSearch
-from objectives import Rosenbrock
+from objectives import Rosenbrock, Chebyquad
+from utils import check_naninf
 import numpy as np
 import warnings
 
 class Newton(OptimizationMethod):
+    @check_naninf
     def get_direction(self, state: State) -> np.ndarray:
         try:
             s = np.linalg.solve(state.hess, -state.grad) # solve Hs = -g, giving us the search direction s
@@ -24,7 +26,7 @@ if __name__ == "__main__":
     Rosenbrock.x0 = np.array([-1.2, 1.0], dtype=float) # change initial guess if needed
 
     # verbose = True will print info for each iteration
-    newton = Newton(Rosenbrock, InExactLineSearch, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, verbose=True)
+    newton = Newton(Rosenbrock, cauchy_tol=1e-7, grad_tol=1e-7, max_iter=1000, verbose=False)
 
     result = newton.optimize(Rosenbrock.x0)
 
