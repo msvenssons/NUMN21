@@ -25,7 +25,7 @@ class InExactLineSearch(LineSearch):
         tao = 9
         sigma = 0.5
         zero = np.zeros_like(state.x)
-        phi_prime_0 = np.linalg.norm(state.grad.T @ state.s)
+        phi_prime_0 = state.grad.T @ state.s
         my = (0 - problem.f(zero))/(p*phi_prime_0)
         
         

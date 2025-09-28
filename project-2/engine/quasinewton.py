@@ -1,7 +1,9 @@
 from src import OptimizationMethod, OptimizationProblem, State
+from linesearch import ExactLineSearch, InExactLineSearch
 import numpy as np
 from objectives import Rosenbrock, Chebyquad
 
+# this can be combined with normal Newton method since they are very similar
 class QuasiNewton(OptimizationMethod):
    def get_direction(self, state: State) -> np.ndarray:
        if self.hess_update not in (None, "good broyden", "symmetric broyden"):
@@ -35,9 +37,9 @@ if __name__ == "__main__":
     Rosenbrock.x0 = np.array([-1.2, 1.0], dtype=float) # change initial guess if needed
 
     """Good Broyden"""
-    quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="good broyden")
+    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="good broyden")
     result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---Good Broyden---\n{result.hess}\n")
+    print(f"---Good Broyden---\n{result.x}\n {result.iter}\n")
 
     """Bad Broyden"""
     quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bad broyden")

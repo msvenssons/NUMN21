@@ -172,7 +172,7 @@ class OptimizationMethod(ABC):
 
     def get_alpha(self, state: State) -> float:
         if self.line_search is not None:
-            return self.line_search.get_line_alpha(self, state, self.problem)
+            return self.line_search.get_line_alpha(state, self.problem)
         else:
             return self.alpha_0 # default to fixed step size (can be dynamic in subclass if needed)
 
