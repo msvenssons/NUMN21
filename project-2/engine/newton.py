@@ -1,4 +1,5 @@
 from src import OptimizationMethod, OptimizationProblem, State
+from linesearch import ExactLineSearch, InExactLineSearch
 from objectives import Rosenbrock
 import numpy as np
 import warnings
@@ -12,6 +13,8 @@ class Newton(OptimizationMethod):
             warnings.warn("Hessian is singular - trying least squares.")
             s = np.linalg.lstsq(state.hess, -state.grad, rcond=None)[0]  # use least squares if Hessian is singular
 
+        state.s = s
+
         return s
 
 
@@ -20,7 +23,8 @@ if __name__ == "__main__":
     Rosenbrock.hess = None # to test finite difference hessian
     Rosenbrock.x0 = np.array([-1.2, 1.0], dtype=float) # change initial guess if needed
 
-    newton = Newton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, verbose=False)
+    # verbose = True will print info for each iteration
+    newton = Newton(Rosenbrock, InExactLineSearch, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, verbose=True)
 
     result = newton.optimize(Rosenbrock.x0)
 
