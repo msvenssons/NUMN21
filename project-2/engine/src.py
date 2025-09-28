@@ -253,7 +253,6 @@ class OptimizationMethod(ABC):
 
             f_new = self.problem.f(x_new)
             g_new = self._grad(x_new)
-            H_new = self._hess(x_new)
 
             delta = x_new - state.x
             gamma = g_new - state.grad
