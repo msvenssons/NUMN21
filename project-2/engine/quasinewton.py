@@ -8,7 +8,7 @@ class QuasiNewton(OptimizationMethod):
    def get_direction(self, state: State) -> np.ndarray:
        if self.hess_update not in (None, "good broyden", "symmetric broyden"):
             # quasi-Newton: state.hess is inverse Hessian (B_k)
-            return -state.hess @ state.grad
+            return np.dot(-state.hess, state.grad) #-state.hess @ state.grad
        else:
             # Newton: state.hess is Hessian (H_k)
             try:
@@ -37,19 +37,19 @@ if __name__ == "__main__":
     Rosenbrock.x0 = np.array([-1.2, 1.0], dtype=float) # change initial guess if needed
 
     """Good Broyden"""
-    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="good broyden")
-    result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---Good Broyden---\n{result.x}\n {result.iter}\n")
+    quasinewton1 = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="good broyden")
+    result = quasinewton1.optimize(Rosenbrock.x0)
+    print(f"---Good Broyden---\n{result.x}\n {result.grad}\n")
 
     """Bad Broyden"""
-    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bad broyden")
-    result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---Bad Broyden---\n{result.x}\n")
+    quasinewton = QuasiNewton(Chebyquad, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bad broyden")
+    result = quasinewton.optimize(Chebyquad.x0)
+    print(f"---Bad Broyden---\n{result.x}\n {result.grad}\n")
 
     """Symmetric Broyden"""
     quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="symmetric broyden")
     result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---Symmetric Broyden---\n{result.x}\n")
+    print(f"---Symmetric Broyden---\n{result.x}\n {result.grad}\n")
 
     """DFP rank-2"""
     quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="dfp2")

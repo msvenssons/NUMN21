@@ -4,7 +4,7 @@ import numpy as np
 
 # example of a line search class
 class ExactLineSearch(LineSearch):
-    def get_line_alpha(self, state: State, problem: OptimizationProblem) -> float:
+    def get_line_alpha(self, g, state: State, problem: OptimizationProblem) -> float:
         a = 0.0
         b = 100.0
         gr = 0.618
@@ -20,6 +20,7 @@ class ExactLineSearch(LineSearch):
             if phi(x_1) < phi(x_2):
                 a = x_2
                 x_2 = x_1
+
             else:
                 b = x_1
                 x_1 = x_2
@@ -29,7 +30,7 @@ class ExactLineSearch(LineSearch):
 
 
 class InExactLineSearch(LineSearch):
-    def get_line_alpha(self, state: State, problem : OptimizationProblem) -> float:
+    def get_line_alpha(self, g, state: State, problem : OptimizationProblem) -> float:
         alpha_k = 0
         alpha_i = 0.9
         a = 0
@@ -50,9 +51,9 @@ class InExactLineSearch(LineSearch):
             if(problem.f(state.x + alpha_i*state.s) > problem.f(zero) + p*alpha_i*phi_prime_0 or problem.f(state.x + alpha_i*state.s) >=problem.f(state.x + alpha_k*state.s)):
                 a = alpha_k
                 b = alpha_i
-            if (abs(self._grad(state.x + alpha_i*state.s))<= - sigma*phi_prime_0):
+            if (abs(g(state.x + alpha_i*state.s))<= - sigma*phi_prime_0):
                 break
-            if(self._grad(state.x + alpha_i*state.s) > 0):
+            if(g(state.x + alpha_i*state.s) > 0):
                 a = alpha_i
                 b = alpha_k
             if my <= 2*alpha_i - alpha_k:

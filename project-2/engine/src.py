@@ -43,7 +43,7 @@ class OptimizationProblem:
 
 class LineSearch(ABC):
     @abstractmethod
-    def get_line_alpha(self, state: State, problem : OptimizationProblem) -> float:
+    def get_line_alpha(self, g, state: State, problem : OptimizationProblem) -> float:
         ...
 
 
@@ -99,11 +99,11 @@ class OptimizationMethod(ABC):
     def _good_broyden_update(self, G: np.ndarray, delta: np.ndarray, gamma: np.ndarray, damp=0.3) -> np.ndarray:
         delta = delta.reshape(-1, 1)
         gamma = gamma.reshape(-1, 1)
-        denom = delta.T @ G @ gamma
+        denom = (delta.T @ G) @ gamma
         if abs(denom) < 1e-12:
             print("Too small denominator, skipping update")
             return G
-        update = ((delta - G @ gamma) @ (delta.T @ G)) / denom
+        update = (((gamma - G) @ delta) @ delta.T) / (delta.T @ delta)
         G += damp * update 
         return G
      
@@ -172,7 +172,7 @@ class OptimizationMethod(ABC):
 
     def get_alpha(self, state: State) -> float:
         if self.line_search is not None:
-            return self.line_search.get_line_alpha(state, self.problem)
+            return self.line_search.get_line_alpha(self._grad, state, self.problem)
         else:
             return self.alpha_0 # default to fixed step size (can be dynamic in subclass if needed)
 
