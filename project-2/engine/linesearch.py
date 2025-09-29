@@ -4,16 +4,29 @@ import numpy as np
 
 # example of a line search class
 class ExactLineSearch(LineSearch):
-    def get_line_alpha(self, state: State, problem : OptimizationProblem) -> float:
-        a = 0.9
-        itr = 0
-        best_a = 0
-        for i in range(1,100):
-            a = a**i
-            if(problem.f(state.x + a*state.s) < problem.f(state.x + best_a*state.s)):
-                best_a = a
+    def get_line_alpha(self, state: State, problem: OptimizationProblem) -> float:
+        a = 0.0
+        b = 100.0
+        gr = 0.618
 
-        return best_a
+        def phi(alpha):
+            return problem.f(state.x + alpha * state.s)
+        
+        while b - a > 1e-6:
+            d = gr * (b - a)
+            x_1 = a + d
+            x_2 = b - d
+
+            if phi(x_1) < phi(x_2):
+                a = x_2
+                x_2 = x_1
+            else:
+                b = x_1
+                x_1 = x_2
+
+        alpha = (a + b) / 2.0
+        return alpha
+
 
 class InExactLineSearch(LineSearch):
     def get_line_alpha(self, state: State, problem : OptimizationProblem) -> float:
