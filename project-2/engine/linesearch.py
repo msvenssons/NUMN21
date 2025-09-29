@@ -8,9 +8,10 @@ class ExactLineSearch(LineSearch):
         a = 0.9
         itr = 0
         for i in range(1,1000):
-            if(problem.f(state.x) < problem.f(state.x + a*state.s)):
+            if(problem.f(state.x + a*state.s) < problem.f(state.x)):
                 itr = i
                 break
+            itr += 1
             a = a**i
         return a**itr
     

@@ -201,7 +201,6 @@ class OptimizationMethod(ABC):
         """
         e_i = np.eye(len(x))
         hess = np.array([(self._fd_grad(x + h * e) - self._fd_grad(x - h * e)) / (2 * h) for e in e_i])
-        hess = np.column_stack(hess)
         return 0.5*(hess + hess.T)   # symmetrizing step
 
 
@@ -258,6 +257,8 @@ class OptimizationMethod(ABC):
             gamma = g_new - state.grad
 
 
+            # move this to inside the quasinewton subclass and replace with just a generic hessian_update method
+            # it returns self._hess if it has not been implemented for that method
             if self.hess_update == "good broyden":
                 H_new = self._good_broyden_update(state.hess, delta, gamma)
             elif self.hess_update == "bad broyden":

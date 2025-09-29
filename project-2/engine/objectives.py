@@ -12,4 +12,4 @@ class Chebyquad(OptimizationProblem):
         f = chebyquad
         grad = gradchebyquad
         hess = None
-        x0 = np.linspace(0, 1, 11)
+        x0 = np.linspace(0, 1, 4)

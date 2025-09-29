@@ -26,7 +26,7 @@ if __name__ == "__main__":
     Rosenbrock.x0 = np.array([-1.2, 1.0], dtype=float) # change initial guess if needed
 
     # verbose = True will print info for each iteration
-    newton = Newton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-7, grad_tol=1e-7, max_iter=1000, verbose=False)
+    newton = Newton(Rosenbrock, line_search=None, cauchy_tol=1e-7, grad_tol=1e-7, max_iter=1000, verbose=False)
 
     result = newton.optimize(Rosenbrock.x0)
 
