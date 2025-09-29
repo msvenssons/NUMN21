@@ -11,8 +11,6 @@ class ExactLineSearch(LineSearch):
             if(problem.f(state.x + a*state.s) < problem.f(state.x)):
                 itr = i
                 break
-            itr += 1
-            a = a**i
         return a**itr
     
 class InExactLineSearch(LineSearch):

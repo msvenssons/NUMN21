@@ -26,7 +26,7 @@ class QuasiNewton(OptimizationMethod):
 
 if __name__ == "__main__":
 
-    quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=100)
+    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=100)
 
     result = quasinewton.optimize(Rosenbrock.x0)
 
@@ -42,24 +42,24 @@ if __name__ == "__main__":
     print(f"---Good Broyden---\n{result.x}\n {result.iter}\n")
 
     """Bad Broyden"""
-    quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bad broyden")
+    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bad broyden")
     result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---Bad Broyden---\n{result.hess}\n")
+    print(f"---Bad Broyden---\n{result.x}\n")
 
     """Symmetric Broyden"""
-    quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="symmetric broyden")
+    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="symmetric broyden")
     result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---Symmetric Broyden---\n{result.hess}\n")
+    print(f"---Symmetric Broyden---\n{result.x}\n")
 
     """DFP rank-2"""
-    quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="dfp2")
+    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="dfp2")
     result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---DFP rank-2---\n{result.hess}\n")
+    print(f"---DFP rank-2---\n{result.x}\n")
 
     """BFGS rank-2"""
-    quasinewton = QuasiNewton(Rosenbrock, cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bfgs2")
+    quasinewton = QuasiNewton(Rosenbrock, line_search=ExactLineSearch(), cauchy_tol=1e-6, grad_tol=1e-6, max_iter=1000, hess_update="bfgs2")
     result = quasinewton.optimize(Rosenbrock.x0)
-    print(f"---BFGS rank-2---\n{result.hess}\n")
+    print(f"---BFGS rank-2---\n{result.x}\n")
 
 
 
