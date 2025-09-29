@@ -7,12 +7,14 @@ class ExactLineSearch(LineSearch):
     def get_line_alpha(self, state: State, problem : OptimizationProblem) -> float:
         a = 0.9
         itr = 0
-        for i in range(1,1000):
-            if(problem.f(state.x + a*state.s) < problem.f(state.x)):
-                itr = i
-                break
-        return a**itr
-    
+        best_a = 0
+        for i in range(1,100):
+            a = a**i
+            if(problem.f(state.x + a*state.s) < problem.f(state.x + best_a*state.s)):
+                best_a = a
+
+        return best_a
+
 class InExactLineSearch(LineSearch):
     def get_line_alpha(self, state: State, problem : OptimizationProblem) -> float:
         alpha_k = 0
